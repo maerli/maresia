@@ -1,6 +1,7 @@
 import React,{Component} from 'react'
 import '../css/pedidos.css'
 import Modal from './Modal'
+import socketIOClient from "socket.io-client"
 
 const url = window.location.protocol + "//" +window.location.hostname + ':4000'
 export default class Pedidos extends Component{
@@ -15,7 +16,8 @@ export default class Pedidos extends Component{
 			total:0,
 			produtos:[],
 			title:"atual",
-			search:''
+			search:'',
+			socket:socketIOClient(url)
 			}
 	}
 	async _makePedido(produto){
@@ -59,8 +61,7 @@ export default class Pedidos extends Component{
 		}
 		this.setState({categorias,mesa,data:categorias,title:"Categorias"})
 	}
-	async _pedidos(vazio){
-		let nurl = vazio?'/database/pedidos': '/select/pedidos/id_pedido/'+this.state.search
+	async _pedidos(nurl){
 		let req1 = await fetch(url + nurl)
 		let res1 = await req1.json()
 		var pedidos = []
@@ -70,10 +71,10 @@ export default class Pedidos extends Component{
 			for(let p of prod){
 				ap.push(<div>Produto <strong>{p.nome}</strong> Quantidade {p.quantidade}</div>)
 			}
-			var spedido = <Card key={pedido.id_pedido} title={pedido.mesa} data={ap} status={pedido.status} id={pedido.id_pedido}/>
+			var spedido = <Card key={pedido.id_pedido} title={pedido.mesa} data={ap} status={pedido.status} id={pedido.id_pedido} socket={this.state.socket}/>
 			pedidos.push(spedido)
 		}
-		return pedidos
+		return pedidos.reverse()
 	}
 	async componentDidMount(){
 		let req2 = await fetch(url + '/database/mesas')
@@ -86,8 +87,9 @@ export default class Pedidos extends Component{
 			</div>)
 			mesas.push(smesa)
 		}
-		let pedidos = await this._pedidos(true)
+		let pedidos = await this._pedidos('/database/pedidos')
 		this.setState({pedidos,mesas})
+		this.state.socket.on("reload",async (data)=> this.setState({pedidos:await this._pedidos('/database/pedidos')}))
 	}
 	async _insertPedido(){
 		let {mesa,garcon,data,status,total,produtos} = this.state
@@ -131,7 +133,7 @@ export default class Pedidos extends Component{
 	)
 	}
 	async _change(event){
-		var pedidos = await this._pedidos()
+		var pedidos = await this._pedidos('/select/pedidos/id_pedido/'+this.state.search)
 		this.setState({search:event.target.value})
 	}
 	render(){
@@ -155,14 +157,24 @@ class Card extends Component{
 		super(props)
 		this.state = {
 			status:this.props.status,
-			aruivado:'block'
+			arquivado:'block',
+			socket:this.props.socket
 		}
 	}
-	_preparar(status){
+	async _preparar(status,id_pedido){
 		if(status == 4){
 			this.setState({arquivado:'none'})
 		}else{
+			let req = await fetch(url + "/edit/pedidos",{
+				method:"POST",
+				headers:{"Content-Type":"application/json"},
+			body:JSON.stringify({coluna1:"id_pedido",value1:id_pedido,coluna2:"status",value2:status})
+			})
+			let res = await req.json()
+			console.log(res)
+			
 			this.setState({status})
+			this.state.socket.emit("newPedido")
 		}
 	}
 	render(){
@@ -180,9 +192,9 @@ class Card extends Component{
 			          </div>
 			        </div>
 			        <div className="card-action">
-			          <button className="btn" onClick={this._preparar.bind(this,1)}>Preparar</button>
+			          <button className="btn" onClick={this._preparar.bind(this,1,this.props.id)}>Preparar</button>
 			          <button className="btn red">Cancelar</button>
-			          <button className="btn orange" onClick={this._preparar.bind(this,2)}> Pronto </button>
+			          <button className="btn orange" onClick={this._preparar.bind(this,2,this.props.id)}> Pronto </button>
 			          <button className="btn grey" onClick={this._preparar.bind(this,4)}> Arquivar </button>
 			        </div>
 			      </div>
