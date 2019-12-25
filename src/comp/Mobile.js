@@ -77,7 +77,9 @@ export default class Mobile extends Component{
 			var spedido = <Card key={pedido.id_pedido} title={pedido.mesa} data={ap} status={pedido.status} total={pedido.total} id={pedido.id_pedido}/>
 			pedidos.push(spedido)
 		}
-		return pedidos.reverse()
+		pedidos = pedidos.reverse()
+		this.setState({pedidos})
+		return pedidos
 	}
 	async componentDidMount(){
 		
@@ -91,9 +93,9 @@ export default class Mobile extends Component{
 			</div>)
 			mesas.push(smesa)
 		}
-		let pedidos = await this._pedidos('/select/pedidos/garcon/'+this.state.garcon)
-		this.setState({pedidos,mesas})
-		this.state.socket.on("reload",async (data)=> alert(0),this.setState({pedidos:await this._pedidos('/select/pedidos/garcon/'+this.state.garcon)}))
+		await this._pedidos('/select/pedidos/garcon/'+this.state.garcon)
+		this.setState({mesas})
+		this.state.socket.on("reload",async (data)=> this._pedidos('/select/pedidos/garcon/'+this.state.garcon))
 	}
 	async _insertPedido(){
 		let {mesa,garcon,data,status,total,produtos} = this.state
@@ -162,7 +164,8 @@ class Card extends Component{
 		super(props)
 		this.state = {
 			status:this.props.status,
-			aruivado:'block'
+			aquivado:'block',
+			socket:this.props.socket
 		}
 	}
 	async _preparar(status,id_pedido){

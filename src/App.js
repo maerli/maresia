@@ -1,6 +1,6 @@
 import React,{Component} from 'react';
 import './App.css'
-import { BrowserRouter,Switch, Route} from 'react-router-dom'
+import { BrowserRouter,Switch, Route, Link} from 'react-router-dom'
 import Home from './comp/Home'
 import Sobre from './comp/Sobre'
 import Users from './comp/Users'
@@ -29,25 +29,25 @@ render(){
 user? (<div style={styles.app} className="App">
 <BrowserRouter>
       <ul>
-	  <li><a className="active" href="/">Home</a></li>
-	  <li><a href="/users">Usuários</a></li>
-	  <li><a href="/mesas">Mesas</a></li>
-    <li><a href="/categorias">Categorias</a></li>
-	  <li><a href="/produtos">Produtos</a></li>
-	  <li><a href="/pedidos"> Pedidos</a></li>
-    <li><a href="/mobile"> Mobile </a></li>
-	  <li><a href="/sobre">Sobre</a></li>
+	  <li><Link className="active" to="/">Home</Link></li>
+	  <li><Link to="/desktop/users">Usuários</Link></li>
+	  <li><Link to="/desktop/mesas">Mesas</Link></li>
+    <li><Link to="/desktop/categorias">Categorias</Link></li>
+	  <li><Link to="/desktop/produtos">Produtos</Link></li>
+	  <li><Link to="/desktop/pedidos"> Pedidos</Link></li>
+    <li><Link to="/desktop/mobile"> Mobile </Link></li>
+	  <li><Link to="/desktop/sobre">Sobre</Link></li>
 	</ul>
 
 <Switch>
-    <Route path="/" exact={true} component={Home} />
-    <Route path="/sobre" component={Sobre} />
-    <Route path="/mesas" component={Mesas} />
-    <Route path="/users" component={Users} />
-    <Route path="/produtos" component={Produtos} />
-    <Route path="/pedidos" component={Pedidos} />
-    <Route path="/categorias" component={Categorias} />
-    <Route path="/mobile" component={Mobile} />
+    <Route path="/desktop" exact={true} component={Home} />
+    <Route path="/desktop/sobre" component={Sobre} />
+    <Route path="/desktop/mesas" component={Mesas} />
+    <Route path="/desktop/users" component={Users} />
+    <Route path="/desktop/produtos" component={Produtos} />
+    <Route path="/desktop/pedidos" component={Pedidos} />
+    <Route path="/desktop/categorias" component={Categorias} />
+    <Route path="/desktop/mobile" component={Mobile} />
 </Switch> 
 </BrowserRouter>
 	</div>) : (<Auth/>)

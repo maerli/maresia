@@ -56,7 +56,8 @@ export default class Pedidos extends Component{
 		let res = await req.json()
 		var categorias = []
 		for(let categoria of res){
-			var scategoria = <div className="hand" onClick={this._getProduto.bind(this,categoria.nome)} key={categoria.id_categoria}> {categoria.nome} </div>
+			var scategoria = <div className="hand" onClick={this._getProduto.bind(this,categoria.nome)} key={categoria.id_categoria}>
+			 {categoria.nome} </div>
 			categorias.push(scategoria)
 		}
 		this.setState({categorias,mesa,data:categorias,title:"Categorias"})
@@ -69,11 +70,12 @@ export default class Pedidos extends Component{
 			var prod = JSON.parse(pedido.produtos).reverse()
 			let ap = []
 			for(let p of prod){
-				ap.push(<div>Produto <strong>{p.nome}</strong> Quantidade {p.quantidade}</div>)
+				ap.push(<div style={{fontSize:'20px'}} >({p.quantidade}) <strong>{p.nome}</strong> >>> {(p.preco * p.quantidade).toFixed(2)} </div>)
 			}
-			var spedido = <Card key={pedido.id_pedido} title={pedido.mesa} data={ap} status={pedido.status} id={pedido.id_pedido} socket={this.state.socket}/>
+			var spedido = <Card key={pedido.id_pedido} title={pedido.mesa} data={ap} status={pedido.status} id={pedido.id_pedido} socket={this.state.socket} total={pedido.total.toFixed(2)}/>
 			pedidos.push(spedido)
 		}
+		console.log(nurl)
 		return pedidos.reverse()
 	}
 	async componentDidMount(){
@@ -162,43 +164,41 @@ class Card extends Component{
 		}
 	}
 	async _preparar(status,id_pedido){
-		if(status == 4){
-			this.setState({arquivado:'none'})
-		}else{
 			let req = await fetch(url + "/edit/pedidos",{
 				method:"POST",
 				headers:{"Content-Type":"application/json"},
 			body:JSON.stringify({coluna1:"id_pedido",value1:id_pedido,coluna2:"status",value2:status})
 			})
 			let res = await req.json()
-			console.log(res)
 			
 			this.setState({status})
 			this.state.socket.emit("newPedido")
-		}
+			this.state.socket.emit("novo_pedido",{garcon:"maerli",id_pedido})
 	}
 	render(){
-		var colors = ["green","blue","black"]
-		var status = ["recebido","preparando","pronto"]
+		var colors = ["green","blue","black","yellow"]
+		var status = ["recebido","preparando","pronto","arquivado"]
 		return (
 			 <div className="row" style={{display:this.state.arquivado}}>
-			    <div className="col s12 m6">
+			    {this.state.status !== 4 && (<div className="col s12 m10">
 			      <div className={"card "+colors[this.state.status]+ " darken-1"}>
 			        <div className="card-content white-text">
-			          <span className="card-title">{this.props.title} <span className="">Pedido n° {this.props.id}</span></span>
+			          <span className="card-title"><span className="">Pedido n° {this.props.id}</span></span>
 			          <div>
+			          <h5> {this.props.title} </h5>
 			          	{this.props.data}
-			          	{status[this.state.status]}
+			          	{status[this.state.status]}<br/>
+			          	Valor total do pedido : ({this.props.total})
 			          </div>
 			        </div>
 			        <div className="card-action">
 			          <button className="btn" onClick={this._preparar.bind(this,1,this.props.id)}>Preparar</button>
 			          <button className="btn red">Cancelar</button>
 			          <button className="btn orange" onClick={this._preparar.bind(this,2,this.props.id)}> Pronto </button>
-			          <button className="btn grey" onClick={this._preparar.bind(this,4)}> Arquivar </button>
+			          <button className="btn grey" onClick={this._preparar.bind(this,4,this.props.id)}> Arquivar </button>
 			        </div>
 			      </div>
-			    </div>
+			    </div>)}
   			</div>
 
 		)
